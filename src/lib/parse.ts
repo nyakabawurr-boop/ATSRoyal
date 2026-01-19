@@ -14,31 +14,43 @@ export type ParseResult = {
 };
 
 export const parseDocxBuffer = async (buffer: Buffer): Promise<ParseResult> => {
-  const result = await mammoth.extractRawText({ buffer });
-  const rawText = result.value ?? "";
-  const warnings = result.messages.map((msg) => msg.message);
-  return buildParseResult(rawText, "docx", warnings);
+  try {
+    const result = await mammoth.extractRawText({ buffer });
+    const rawText = result.value ?? "";
+    const warnings = result.messages.map((msg) => msg.message);
+    return buildParseResult(rawText, "docx", warnings);
+  } catch (error) {
+    return buildParseResult("", "docx", [
+      "Unable to extract text from this DOCX. The file may be protected or malformed.",
+    ]);
+  }
 };
 
 export const parsePdfBuffer = async (buffer: Buffer): Promise<ParseResult> => {
-  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const loadingTask = pdfjs.getDocument({ data: buffer });
-  const pdf = await loadingTask.promise;
-  const pages = [];
-  for (let pageIndex = 1; pageIndex <= pdf.numPages; pageIndex += 1) {
-    const page = await pdf.getPage(pageIndex);
-    const content = await page.getTextContent();
-    const pageText = content.items
-      .map((item) =>
-        typeof (item as { str?: string }).str === "string"
-          ? (item as { str: string }).str
-          : ""
-      )
-      .join(" ");
-    pages.push(pageText);
+  try {
+    const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+    const loadingTask = pdfjs.getDocument({ data: buffer });
+    const pdf = await loadingTask.promise;
+    const pages = [];
+    for (let pageIndex = 1; pageIndex <= pdf.numPages; pageIndex += 1) {
+      const page = await pdf.getPage(pageIndex);
+      const content = await page.getTextContent();
+      const pageText = content.items
+        .map((item) =>
+          typeof (item as { str?: string }).str === "string"
+            ? (item as { str: string }).str
+            : ""
+        )
+        .join(" ");
+      pages.push(pageText);
+    }
+    const rawText = pages.join("\n");
+    return buildParseResult(rawText, "pdf", []);
+  } catch (error) {
+    return buildParseResult("", "pdf", [
+      "Unable to extract text from this PDF. The file may be scanned, encrypted, or image-only.",
+    ]);
   }
-  const rawText = pages.join("\n");
-  return buildParseResult(rawText, "pdf", []);
 };
 
 const buildParseResult = (

@@ -43,6 +43,24 @@ export const ResumeInput = ({
       method: "POST",
       body: formData,
     });
+    if (!response.ok) {
+      const payload: ResumeInputPayload = {
+        resume: parseResumeFromText(textValue),
+        rawText: normalizeText(textValue),
+        fileMeta: {
+          isScanned: true,
+          textLength: 0,
+          fileType: file.name.endsWith(".pdf") ? "pdf" : "docx",
+        },
+        sourceName: file.name,
+      };
+      setStaged(payload);
+      if (autoUseOnFile) {
+        onUse(payload);
+      }
+      setIsParsing(false);
+      return;
+    }
     const parsed = (await response.json()) as {
       resume: Resume;
       rawText: string;
