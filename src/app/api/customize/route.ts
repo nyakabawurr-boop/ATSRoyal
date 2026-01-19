@@ -26,6 +26,7 @@ export async function POST(request: Request) {
     jobDescription: payload.jobDescription,
     sectionOrder: payload.sectionOrder ?? [],
     includeSections: payload.includeSections ?? [],
+    rawText: payload.rawText,
   });
 
   return NextResponse.json(result);

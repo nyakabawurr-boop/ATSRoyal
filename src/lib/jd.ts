@@ -24,10 +24,14 @@ export const extractKeywords = (text: string) => {
   return dedupe([...tokens, ...phrases, ...skillMatches]).slice(0, 40);
 };
 
-export const computeMatchScore = (resume: Resume, jdText: string): MatchScore => {
+export const computeMatchScore = (
+  resume: Resume,
+  jdText: string,
+  rawText?: string
+): MatchScore => {
   const normalizedJd = normalizeJobDescription(jdText);
   const keywords = extractKeywords(normalizedJd);
-  const resumeText = [
+  const structuredText = [
     resume.summary,
     resume.skills.join(" "),
     resume.experience.map((exp) => exp.bullets.join(" ")).join(" "),
@@ -35,6 +39,11 @@ export const computeMatchScore = (resume: Resume, jdText: string): MatchScore =>
   ]
     .join(" ")
     .toLowerCase();
+  const fallbackText = rawText?.toLowerCase() ?? "";
+  const resumeText =
+    structuredText.replace(/\s+/g, "").length > 200
+      ? structuredText
+      : fallbackText || structuredText;
 
   const hits = keywords.filter((keyword) => resumeText.includes(keyword));
   const missing = keywords.filter((keyword) => !resumeText.includes(keyword));

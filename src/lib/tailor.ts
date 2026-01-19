@@ -8,6 +8,7 @@ type TailorInput = {
   jobDescription: string;
   sectionOrder: string[];
   includeSections: string[];
+  rawText?: string;
 };
 
 export const tailorResume = async ({
@@ -15,6 +16,7 @@ export const tailorResume = async ({
   jobDescription,
   sectionOrder,
   includeSections,
+  rawText,
 }: TailorInput): Promise<TailoredOutput> => {
   const original = structuredClone(resume);
   const keywords = extractKeywords(jobDescription);
@@ -41,7 +43,7 @@ export const tailorResume = async ({
   }
 
   const reordered = applySectionOrder(tailored, sectionOrder, includeSections);
-  const match = computeMatchScore(reordered, jobDescription);
+  const match = computeMatchScore(reordered, jobDescription, rawText);
 
   const changes = buildChanges(original, reordered, keywords);
   const enhancedAreas = [

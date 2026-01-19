@@ -27,6 +27,7 @@ export default function CustomizePage() {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resumeRawText, setResumeRawText] = useState("");
 
   const runTailor = async () => {
     if (!resume || !jobDescription) {
@@ -44,6 +45,7 @@ export default function CustomizePage() {
         jobDescription,
         sectionOrder,
         includeSections,
+        rawText: resumeRawText,
       }),
     });
     if (!response.ok) {
@@ -85,7 +87,10 @@ export default function CustomizePage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <ResumeInput
-            onUse={(payload) => setResume(payload.resume as Resume)}
+            onUse={(payload) => {
+              setResume(payload.resume as Resume);
+              setResumeRawText(payload.rawText ?? "");
+            }}
             helperText="Paste your resume or upload a file to use it for tailoring."
           />
           <div>
