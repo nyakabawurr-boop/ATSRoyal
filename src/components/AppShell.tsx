@@ -17,6 +17,10 @@ const NAV_ITEMS = [
 export const AppShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const clearAll = useResumeStore((state) => state.clearAll);
+  const handleClear = () => {
+    clearAll();
+    useResumeStore.persist.clearStorage?.();
+  };
 
   return (
     <div className="min-h-screen">
@@ -30,7 +34,7 @@ export const AppShell = ({ children }: { children: React.ReactNode }) => {
               <p className="text-sm font-semibold text-slate-900">Royal</p>
             </div>
           </div>
-          <Button variant="outline" onClick={clearAll}>
+          <Button variant="outline" onClick={handleClear}>
             Delete session data
           </Button>
         </div>

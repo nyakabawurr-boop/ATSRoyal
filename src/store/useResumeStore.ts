@@ -9,6 +9,7 @@ type ResumeState = {
   tailored: TailoredOutput | null;
   sectionOrder: string[];
   includeSections: string[];
+  resetCounter: number;
   setResume: (resume: Resume | null) => void;
   setJob: (job: Job | null) => void;
   setTailored: (tailored: TailoredOutput | null) => void;
@@ -25,19 +26,21 @@ export const useResumeStore = create<ResumeState>()(
       tailored: null,
       sectionOrder: DEFAULT_SECTION_ORDER,
       includeSections: [...DEFAULT_SECTION_ORDER],
+      resetCounter: 0,
       setResume: (resume) => set({ resume }),
       setJob: (job) => set({ job }),
       setTailored: (tailored) => set({ tailored }),
       setSectionOrder: (sectionOrder) => set({ sectionOrder }),
       setIncludeSections: (includeSections) => set({ includeSections }),
       clearAll: () =>
-        set({
+        set((state) => ({
           resume: null,
           job: null,
           tailored: null,
           sectionOrder: DEFAULT_SECTION_ORDER,
           includeSections: [...DEFAULT_SECTION_ORDER],
-        }),
+          resetCounter: state.resetCounter + 1,
+        })),
     }),
     {
       name: "ats-resume-store",

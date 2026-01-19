@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ export default function CustomizePage() {
     setTailored,
     sectionOrder,
     includeSections,
+    resetCounter,
   } = useResumeStore();
 
   const [jobDescription, setJobDescription] = useState(
@@ -28,6 +29,14 @@ export default function CustomizePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resumeRawText, setResumeRawText] = useState("");
+
+  useEffect(() => {
+    setJobDescription("");
+    setError(null);
+    setResumeRawText("");
+    setIsLoading(false);
+    setTailored(null);
+  }, [resetCounter, setTailored]);
 
   const runTailor = async () => {
     if (!resume || !jobDescription) {

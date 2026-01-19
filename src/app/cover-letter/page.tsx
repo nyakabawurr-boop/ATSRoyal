@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,12 +11,18 @@ const TONES = ["Professional", "Confident", "Concise"] as const;
 const LENGTHS = ["Short", "Standard", "Detailed"] as const;
 
 export default function CoverLetterPage() {
-  const { tailored, resume, job } = useResumeStore();
+  const { tailored, resume, job, resetCounter } = useResumeStore();
   const [tone, setTone] = useState<(typeof TONES)[number]>("Professional");
   const [length, setLength] = useState<(typeof LENGTHS)[number]>("Standard");
   const [letter, setLetter] = useState("");
   const [jobDescription, setJobDescription] = useState(job?.description ?? "");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setJobDescription("");
+    setLetter("");
+    setIsLoading(false);
+  }, [resetCounter]);
 
   const handleGenerate = async () => {
     const sourceResume = tailored?.resume ?? resume;

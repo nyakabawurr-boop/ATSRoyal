@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { AtsScore } from "@/lib/types";
@@ -65,7 +65,15 @@ export default function AtsCheckPage() {
     includeSections,
     setSectionOrder,
     setIncludeSections,
+    resetCounter,
   } = useResumeStore();
+
+  useEffect(() => {
+    setParseResult(null);
+    setScore(null);
+    setIsLoading(false);
+    setIsExporting(false);
+  }, [resetCounter]);
 
   const handleUseResume = async (payload: {
     rawText: string;
