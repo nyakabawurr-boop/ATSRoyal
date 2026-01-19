@@ -1,0 +1,12 @@
+Senior Full Stack Engineer
+
+Responsibilities:
+- Build and maintain React + Node.js applications
+- Collaborate with product and design teams
+- Improve performance and reliability
+
+Requirements:
+- 4+ years of experience in full stack development
+- React, TypeScript, Node.js
+- Experience with AWS and CI/CD pipelines
+- Strong communication skills
