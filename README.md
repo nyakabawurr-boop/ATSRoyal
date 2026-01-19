@@ -13,7 +13,7 @@ An ATS-safe resume utility with three modules: format checking, resume tailoring
 - Next.js App Router + TypeScript + Tailwind
 - Zustand + localStorage autosave
 - Parsing: `mammoth` (DOCX), `pdfjs-dist` (PDF)
-- Exports: `docx`, `pdfkit`
+- Exports: `docx`, `pdf-lib`
 - Tests: Vitest
 
 ## Setup

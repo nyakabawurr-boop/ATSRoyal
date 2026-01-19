@@ -1,5 +1,5 @@
 import { Document, Packer, Paragraph, TextRun } from "docx";
-import PDFDocument from "pdfkit";
+import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import type { Resume } from "./types";
 import { formatDateRange } from "./utils";
 
@@ -89,21 +89,39 @@ export const buildPdf = async (
   resume: Resume,
   options?: { sectionOrder?: string[]; includeSections?: string[] }
 ) => {
-  const doc = new PDFDocument({ margin: 40 });
-  const chunks: Buffer[] = [];
-  doc.on("data", (chunk) => chunks.push(chunk));
-  doc.on("end", () => undefined);
+  const pdfDoc = await PDFDocument.create();
+  const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const page = pdfDoc.addPage([612, 792]);
+  const margin = 40;
+  const contentWidth = page.getWidth() - margin * 2;
+  let cursorY = page.getHeight() - margin;
+  const lineGap = 4;
+
+  const writeLine = (text: string, fontSize: number, bold = false) => {
+    const font = bold ? fontBold : fontRegular;
+    const lines = wrapText(text, font, fontSize, contentWidth);
+    lines.forEach((line) => {
+      cursorY -= fontSize + lineGap;
+      page.drawText(line, {
+        x: margin,
+        y: cursorY,
+        size: fontSize,
+        font,
+        color: rgb(0.05, 0.08, 0.14),
+      });
+    });
+  };
 
   const writeHeading = (text: string) => {
-    doc.moveDown(0.8);
-    doc.fontSize(12).font("Helvetica-Bold").text(text);
-    doc.moveDown(0.2);
+    cursorY -= 6;
+    writeLine(text, 12, true);
+    cursorY -= 2;
   };
 
   const writeBullet = (text: string) => {
-    doc.font("Helvetica").fontSize(10).text(`• ${text}`, {
-      indent: 12,
-    });
+    const bulletText = `• ${text}`;
+    writeLine(bulletText, 10, false);
   };
 
   const contactLine = [
@@ -119,7 +137,7 @@ export const buildPdf = async (
     .join(" | ");
 
   if (contactLine) {
-    doc.fontSize(12).font("Helvetica-Bold").text(contactLine);
+    writeLine(contactLine, 12, true);
   }
 
   const order = options?.sectionOrder ?? [
@@ -139,13 +157,13 @@ export const buildPdf = async (
       case "summary":
         if (resume.summary) {
           writeHeading("SUMMARY");
-          doc.fontSize(10).font("Helvetica").text(resume.summary);
+          writeLine(resume.summary, 10);
         }
         break;
       case "skills":
         if (resume.skills.length) {
           writeHeading("SKILLS");
-          doc.fontSize(10).font("Helvetica").text(resume.skills.join(", "));
+          writeLine(resume.skills.join(", "), 10);
         }
         break;
       case "experience":
@@ -161,8 +179,8 @@ export const buildPdf = async (
             ]
               .filter(Boolean)
               .join(" | ");
-            if (header) doc.font("Helvetica-Bold").fontSize(10).text(header);
-            if (meta) doc.font("Helvetica").fontSize(9).text(meta);
+            if (header) writeLine(header, 10, true);
+            if (meta) writeLine(meta, 9);
             entry.bullets.forEach((bullet) => writeBullet(bullet));
           });
         }
@@ -180,8 +198,8 @@ export const buildPdf = async (
             ]
               .filter(Boolean)
               .join(" | ");
-            if (header) doc.font("Helvetica-Bold").fontSize(10).text(header);
-            if (meta) doc.font("Helvetica").fontSize(9).text(meta);
+            if (header) writeLine(header, 10, true);
+            if (meta) writeLine(meta, 9);
             entry.details?.forEach((detail) => writeBullet(detail));
           });
         }
@@ -193,7 +211,7 @@ export const buildPdf = async (
             const header = [project.name, project.link]
               .filter(Boolean)
               .join(" - ");
-            if (header) doc.font("Helvetica-Bold").fontSize(10).text(header);
+            if (header) writeLine(header, 10, true);
             project.bullets.forEach((bullet) => writeBullet(bullet));
           });
         }
@@ -215,8 +233,8 @@ export const buildPdf = async (
     }
   });
 
-  doc.end();
-  return Buffer.concat(chunks);
+  const bytes = await pdfDoc.save();
+  return Buffer.from(bytes);
 };
 
 export const buildCoverLetterDocx = async (
@@ -249,20 +267,65 @@ export const buildCoverLetterPdf = async (
   letter: string,
   contactLine: string
 ) => {
-  const doc = new PDFDocument({ margin: 50 });
-  const chunks: Buffer[] = [];
-  doc.on("data", (chunk) => chunks.push(chunk));
-  doc.on("end", () => undefined);
+  const pdfDoc = await PDFDocument.create();
+  const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const page = pdfDoc.addPage([612, 792]);
+  const margin = 50;
+  const contentWidth = page.getWidth() - margin * 2;
+  let cursorY = page.getHeight() - margin;
+  const lineGap = 4;
+
+  const writeLine = (text: string, fontSize: number, bold = false) => {
+    const font = bold ? fontBold : fontRegular;
+    const lines = wrapText(text, font, fontSize, contentWidth);
+    lines.forEach((line) => {
+      cursorY -= fontSize + lineGap;
+      page.drawText(line, {
+        x: margin,
+        y: cursorY,
+        size: fontSize,
+        font,
+        color: rgb(0.05, 0.08, 0.14),
+      });
+    });
+  };
+
   if (contactLine) {
-    doc.fontSize(12).font("Helvetica-Bold").text(contactLine);
-    doc.moveDown(1);
+    writeLine(contactLine, 12, true);
+    cursorY -= 6;
   }
+
   letter.split(/\n\n/).forEach((paragraph) => {
-    doc.fontSize(11).font("Helvetica").text(paragraph);
-    doc.moveDown(0.8);
+    writeLine(paragraph, 11, false);
+    cursorY -= 6;
   });
-  doc.end();
-  return Buffer.concat(chunks);
+
+  const bytes = await pdfDoc.save();
+  return Buffer.from(bytes);
+};
+
+const wrapText = (
+  text: string,
+  font: { widthOfTextAtSize: (value: string, size: number) => number },
+  fontSize: number,
+  maxWidth: number
+) => {
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let line = "";
+  words.forEach((word) => {
+    const next = line ? `${line} ${word}` : word;
+    const width = font.widthOfTextAtSize(next, fontSize);
+    if (width <= maxWidth) {
+      line = next;
+    } else {
+      if (line) lines.push(line);
+      line = word;
+    }
+  });
+  if (line) lines.push(line);
+  return lines;
 };
 
 const addSection = (children: Paragraph[], heading: string, text: string) => {
