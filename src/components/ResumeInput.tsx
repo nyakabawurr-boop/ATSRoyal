@@ -21,9 +21,14 @@ type ResumeInputPayload = {
 type ResumeInputProps = {
   onUse: (payload: ResumeInputPayload) => void;
   helperText?: string;
+  autoUseOnFile?: boolean;
 };
 
-export const ResumeInput = ({ onUse, helperText }: ResumeInputProps) => {
+export const ResumeInput = ({
+  onUse,
+  helperText,
+  autoUseOnFile = true,
+}: ResumeInputProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [textValue, setTextValue] = useState("");
@@ -50,6 +55,9 @@ export const ResumeInput = ({ onUse, helperText }: ResumeInputProps) => {
       sourceName: file.name,
     };
     setStaged(payload);
+    if (autoUseOnFile) {
+      onUse(payload);
+    }
     setIsParsing(false);
   };
 
