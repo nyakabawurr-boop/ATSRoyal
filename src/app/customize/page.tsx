@@ -144,69 +144,32 @@ export default function CustomizePage() {
       <div className="space-y-6">
         {tailored && (
           <>
-            <div className="grid gap-6 md:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Match Score</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-4xl font-semibold text-slate-900">
-                    {tailored.match.overall}%
-                  </div>
-                  <Badge variant="green">Hybrid Score</Badge>
-                  <div className="mt-4 space-y-2 text-sm text-slate-600">
-                    <p>Summary: {tailored.match.sections.summary}%</p>
-                    <p>Skills: {tailored.match.sections.skills}%</p>
-                    <p>Experience: {tailored.match.sections.experience}%</p>
-                    <p>Projects: {tailored.match.sections.projects}%</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Enhanced Areas</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm text-slate-600">
-                  {tailored.enhancedAreas.map((area) => (
-                    <p key={area}>• {area}</p>
-                  ))}
-                  {tailored.match.missingKeywords.length > 0 && (
-                    <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
-                      Missing keywords (add if true):{" "}
-                      {tailored.match.missingKeywords.join(", ")}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Match Score</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-4xl font-semibold text-slate-900">
+                  {tailored.match.overall}%
+                </div>
+                <Badge variant="green">Hybrid Score</Badge>
+                <div className="mt-4 space-y-2 text-sm text-slate-600">
+                  <p>Summary: {tailored.match.sections.summary}%</p>
+                  <p>Skills: {tailored.match.sections.skills}%</p>
+                  <p>Experience: {tailored.match.sections.experience}%</p>
+                  <p>Projects: {tailored.match.sections.projects}%</p>
+                </div>
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Change Log</CardTitle>
+                <CardTitle>Original Resume Preview</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600">
-                {tailored.changes.length === 0 && (
-                  <p>No content rewrites required. Content was reordered only.</p>
-                )}
-                {tailored.changes.map((change) => (
-                  <div
-                    key={change.section}
-                    className="rounded-md bg-slate-50 p-3"
-                  >
-                    <p className="font-semibold text-slate-800">
-                      {change.section}
-                    </p>
-                    <p className="text-xs uppercase text-slate-400">Before</p>
-                    <p>{change.before}</p>
-                    <p className="mt-2 text-xs uppercase text-slate-400">
-                      After
-                    </p>
-                    <p>{change.after}</p>
-                    <p className="mt-2 text-xs text-slate-500">
-                      {change.reason}
-                    </p>
-                  </div>
-                ))}
+              <CardContent>
+                <pre className="max-h-[320px] overflow-auto rounded-md bg-slate-900 p-4 text-xs text-slate-100">
+                  {resumeToPlainText(resume, { sectionOrder, includeSections })}
+                </pre>
               </CardContent>
             </Card>
 
