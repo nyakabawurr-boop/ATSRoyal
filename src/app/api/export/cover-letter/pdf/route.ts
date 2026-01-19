@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     payload.letter,
     payload.contactLine ?? ""
   );
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": "attachment; filename=cover-letter.pdf",

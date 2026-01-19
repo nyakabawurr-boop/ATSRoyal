@@ -21,11 +21,23 @@ export const parseDocxBuffer = async (buffer: Buffer): Promise<ParseResult> => {
 };
 
 export const parsePdfBuffer = async (buffer: Buffer): Promise<ParseResult> => {
-  const mod = await import("pdf-parse");
-  const pdfParse =
-    "default" in mod && typeof mod.default === "function" ? mod.default : mod;
-  const result = await pdfParse(buffer);
-  const rawText = result.text ?? "";
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  const loadingTask = pdfjs.getDocument({ data: buffer });
+  const pdf = await loadingTask.promise;
+  const pages = [];
+  for (let pageIndex = 1; pageIndex <= pdf.numPages; pageIndex += 1) {
+    const page = await pdf.getPage(pageIndex);
+    const content = await page.getTextContent();
+    const pageText = content.items
+      .map((item) =>
+        typeof (item as { str?: string }).str === "string"
+          ? (item as { str: string }).str
+          : ""
+      )
+      .join(" ");
+    pages.push(pageText);
+  }
+  const rawText = pages.join("\n");
   return buildParseResult(rawText, "pdf", []);
 };
 

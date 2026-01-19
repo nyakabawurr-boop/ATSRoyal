@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     sectionOrder: payload.sectionOrder,
     includeSections: payload.includeSections,
   });
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": "attachment; filename=tailored-resume.pdf",
