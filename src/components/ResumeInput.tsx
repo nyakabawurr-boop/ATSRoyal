@@ -35,48 +35,69 @@ export const ResumeInput = ({
   const [staged, setStaged] = useState<ResumeInputPayload | null>(null);
   const [isParsing, setIsParsing] = useState(false);
 
+  const buildFallbackPayload = (fileName: string) => {
+    const normalized = normalizeText(textValue);
+    return {
+      resume: parseResumeFromText(normalized),
+      rawText: normalized,
+      fileMeta: {
+        isScanned: true,
+        textLength: normalized.replace(/\s+/g, "").length,
+        fileType: fileName.endsWith(".pdf") ? "pdf" : "docx",
+      },
+      sourceName: fileName,
+    } as ResumeInputPayload;
+  };
+
   const parseFile = async (file: File) => {
     setIsParsing(true);
     const formData = new FormData();
     formData.append("file", file);
-    const response = await fetch("/api/parse", {
-      method: "POST",
-      body: formData,
-    });
-    if (!response.ok) {
-      const payload: ResumeInputPayload = {
-        resume: parseResumeFromText(textValue),
-        rawText: normalizeText(textValue),
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 15000);
+    try {
+      const response = await fetch("/api/parse", {
+        method: "POST",
+        body: formData,
+        signal: controller.signal,
+      });
+      if (!response.ok) {
+        const payload = buildFallbackPayload(file.name);
+        setStaged(payload);
+        if (autoUseOnFile) {
+          onUse(payload);
+        }
+        return;
+      }
+      const parsed = (await response.json()) as {
+        resume: Resume;
+        rawText: string;
         fileMeta: {
-          isScanned: true,
-          textLength: 0,
-          fileType: file.name.endsWith(".pdf") ? "pdf" : "docx",
-        },
+          isScanned: boolean;
+          textLength: number;
+          fileType: "pdf" | "docx";
+        };
+      };
+      const payload: ResumeInputPayload = {
+        resume: parsed.resume,
+        rawText: parsed.rawText,
+        fileMeta: parsed.fileMeta,
         sourceName: file.name,
       };
       setStaged(payload);
       if (autoUseOnFile) {
         onUse(payload);
       }
+    } catch (error) {
+      const payload = buildFallbackPayload(file.name);
+      setStaged(payload);
+      if (autoUseOnFile) {
+        onUse(payload);
+      }
+    } finally {
+      window.clearTimeout(timeoutId);
       setIsParsing(false);
-      return;
     }
-    const parsed = (await response.json()) as {
-      resume: Resume;
-      rawText: string;
-      fileMeta: { isScanned: boolean; textLength: number; fileType: "pdf" | "docx" };
-    };
-    const payload: ResumeInputPayload = {
-      resume: parsed.resume,
-      rawText: parsed.rawText,
-      fileMeta: parsed.fileMeta,
-      sourceName: file.name,
-    };
-    setStaged(payload);
-    if (autoUseOnFile) {
-      onUse(payload);
-    }
-    setIsParsing(false);
   };
 
   const parseText = () => {
